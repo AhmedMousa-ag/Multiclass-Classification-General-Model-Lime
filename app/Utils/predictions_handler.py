@@ -1,14 +1,11 @@
-import warnings
 import numpy as np
 import os
 import config
 import pandas as pd
 from Utils.model_builder import load_model
-from Utils.preprocess.preprocess import PreprocessData, prep_NUMERIC, prep_TEXT
-import logging
+from Utils.preprocess.preprocess import PreprocessData, prep_NUMERIC
 import os
-from abc import ABC, abstractmethod
-
+from Utils.preprocess.schema_handler import produce_schema_param
 
 
 SAVED_TEST_PRED_PATH = config.SAVED_TEST_PRED_PATH
@@ -52,7 +49,7 @@ class Predictor(__predictor_base_explain):
             self.preprocessor = PreprocessData(
                 data, train=False, shuffle_data=False)
 
-        self.text_vectorizer = None
+        self.schema = produce_schema_param(config.DATA_SCHEMA)
 
     def predict_test(self, data=None):  # called for test prediction
         if not data is None:
@@ -65,24 +62,24 @@ class Predictor(__predictor_base_explain):
 
         processed_data = self.preprocessor.get_data()
 
-        preds = self.model.predict(processed_data)
-
-
-        num_uniq_preds = [2 if np.array(preds).shape[1]==1 else np.array(preds).shape[1]][0]
-        uniqe_preds_names = np.squeeze(self.preprocessor.invers_labels(sorted(range(num_uniq_preds))))
+        preds = self.model.predict(processed_data).to_numpy()
+        pred_probab = self.model.predict_proba(processed_data).to_numpy()
+        print("prediction probability: ",pred_probab)
+        num_uniq_preds = len(self.schema["target_classes"])
+        uniqe_preds_names = self.preprocessor.invers_labels(preds)
         results_pd = pd.DataFrame([])
         results_pd[id_col_name] = ids
 
 
         if num_uniq_preds > 2:
-            for i in range(len(preds[0,:])): # Iterate over number of columns of model prediction
+            for i in range(len(pred_probab[0,:])): # Iterate over number of columns of model prediction
                 col_name = self.preprocessor.invers_labels([i])[0]
-                results_pd[col_name] = preds[:,i]
+                results_pd[col_name] = pred_probab[:,i]
         else:
             #This means it's either 0 or 1
-                pred = np.squeeze(preds)
-                results_pd[uniqe_preds_names[0]] = 1-pred
-                results_pd[uniqe_preds_names[1]] = pred
+                pred_probab = np.squeeze(pred_probab)
+                results_pd[uniqe_preds_names[0]] = 1-pred_probab
+                results_pd[uniqe_preds_names[1]] = pred_probab
 
         # will convert get final prediction # uncomment if want to get final prediction column
         '''preds = self.conv_labels_no_probability(preds)
@@ -104,7 +101,6 @@ class Predictor(__predictor_base_explain):
 
         processed_data = self.preprocessor.get_data()
         preds = self.model.predict(processed_data)
-        preds = self.conv_labels_no_probability(preds)
         preds = self.preprocessor.invers_labels(preds)
         results_pd = pd.DataFrame([])
         results_pd[id_col_name] = ids
@@ -114,7 +110,7 @@ class Predictor(__predictor_base_explain):
 
     def conv_labels_no_probability(self, preds):
         #preds = np.array(np.squeeze(preds))
-        if preds.shape[1] < 2:
+        if len(self.schema["target_classes"]) < 2:
             preds = np.array(np.squeeze(preds))
             if preds.size < 2:  # If passed one prediction it cause and error if not expanded dimension
                 prediction = np.array(np.expand_dims(

@@ -10,14 +10,14 @@ import traceback
 import pandas as pd
 import os
 from autogluon.tabular import  TabularPredictor, TabularDataset
-from Utils.hyperparameter import HYPERPARAMETERS, HYPERPARAMETER_TUNE_KWARGS, TIMELIMIT
+#from Utils.hyperparameter import TIMELIMIT , HYPERPARAMETERS, HYPERPARAMETER_TUNE_KWARGS,
 
 
 
 def train():
     try:
         print('---------------------Training Started---------------------.')
-        data = pd.read_csv(data_path)
+        data = pd.read_csv(config.TRAIN_DATA_PATH)
 
         preprocessor = PreprocessData(data=data)
         preprocessor.drop_ids()
@@ -29,8 +29,8 @@ def train():
 
         predictor = TabularPredictor(label="driver_factor",path=config.MODEL_SAVE_PATH)
         result = predictor.fit(train_data=train_data,
-                    verbosity=3,presets=PRESETS, time_limit=TIMELIMIT,
-         )#hyperparameters=HYPERPARAMETERS,hyperparameter_tune_kwargs=HYPERPARAMETER_TUNE_KWARGS)
+                    verbosity=3,presets=PRESETS)#, time_limit=TIMELIMIT,
+         #hyperparameters=HYPERPARAMETERS,hyperparameter_tune_kwargs=HYPERPARAMETER_TUNE_KWARGS)
         print("hyper res: ",result)
         print(".................finished training...............")
       #  predictor.save(config.MODEL_SAVE_PATH)
@@ -39,6 +39,7 @@ def train():
         print("error!")
         # Write out an error file. This will be returned as the failureReason to the client.
         trc = traceback.format_exc()
+        failure_path = config.FAILURE_PATH
         failure_file_path = os.path.join(failure_path, "train_failure.txt")
         with open(failure_file_path, 'w') as s:
             s.write('Exception during training: ' + str(e) + '\n' + trc)

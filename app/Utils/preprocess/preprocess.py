@@ -11,7 +11,6 @@ import os
 
 ARTIFACTS_PATH = config.PREPROCESS_ARTIFACT_PATH
 DATA_SCHEMA = config.DATA_SCHEMA
-TEXT_VECTORIZER_NAME = config.TEXT_VECTORIZER_NAME
 
 
 class PreprocessData():
@@ -99,7 +98,7 @@ class PreprocessData():
         self.data.drop(self.id_col, axis=1, inplace=True)
 
     def get_ids(self):
-        return self.data[self.sort_col_names[0]]
+        return self.data[list(self.sort_col_names)[0]]
 
     def sort_as_schem(self):
         '''To ensure the consistancy of inputs are the same each time'''

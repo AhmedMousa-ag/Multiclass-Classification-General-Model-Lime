@@ -1,6 +1,9 @@
 import os
 from Utils.utlis import read_json_file
 import glob
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def check_dir(dir_path):
@@ -18,7 +21,7 @@ RAND_SEED = 42
 
 OUTPUTS_PATH = os.path.join(prefix, "outputs")
 
-check_dir(os.path.join(prefix, "inputs", "schema"))
+check_dir(os.path.join(OUTPUTS_PATH, "inputs", "schema"))
 #print("dirctory: ",os.path.join(prefix, "inputs", "schema"))
 DATA_SCHEMA_PATH = glob.glob(os.path.join(prefix, "inputs", "schema", "*.json"))[
     0
