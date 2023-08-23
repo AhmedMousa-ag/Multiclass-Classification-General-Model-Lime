@@ -1,0 +1,53 @@
+#! /usr/bin/env python
+import logging, os
+logging.disable(logging.WARNING)
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
+import sys
+from Utils.preprocess.preprocess import PreprocessData
+import config
+import traceback
+import pandas as pd
+import os
+from autogluon.tabular import  TabularPredictor, TabularDataset
+from Utils.hyperparameter import HYPERPARAMETERS, HYPERPARAMETER_TUNE_KWARGS, TIMELIMIT
+
+
+
+def train():
+    try:
+        print('---------------------Training Started---------------------.')
+        data = pd.read_csv(data_path)
+
+        preprocessor = PreprocessData(data=data)
+        preprocessor.drop_ids()
+        train_data = preprocessor.get_data()
+
+        train_data = TabularDataset(train_data)
+
+        PRESETS = ['good_quality', 'optimize_for_deployment']
+
+        predictor = TabularPredictor(label="driver_factor",path=config.MODEL_SAVE_PATH)
+        result = predictor.fit(train_data=train_data,
+                    verbosity=3,presets=PRESETS, time_limit=TIMELIMIT,
+         )#hyperparameters=HYPERPARAMETERS,hyperparameter_tune_kwargs=HYPERPARAMETER_TUNE_KWARGS)
+        print("hyper res: ",result)
+        print(".................finished training...............")
+      #  predictor.save(config.MODEL_SAVE_PATH)
+        print(".................Model saved succesfully.........")
+    except Exception as e:
+        print("error!")
+        # Write out an error file. This will be returned as the failureReason to the client.
+        trc = traceback.format_exc()
+        failure_file_path = os.path.join(failure_path, "train_failure.txt")
+        with open(failure_file_path, 'w') as s:
+            s.write('Exception during training: ' + str(e) + '\n' + trc)
+        # Printing this causes the exception to be in the training job logs, as well.
+        print('Exception during training: ' +
+              str(e) + '\n' + trc, file=sys.stderr)
+        # A non-zero exit code causes the training job to be marked as Failed.
+        sys.exit(255)
+
+
+if __name__ == '__main__':
+    train()
