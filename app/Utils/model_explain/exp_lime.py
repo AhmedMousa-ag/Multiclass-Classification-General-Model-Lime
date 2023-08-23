@@ -1,12 +1,12 @@
 """This module for model explainable using lime"""
 
-from lime.lime_text import LimeTextExplainer
+from lime.lime_tabular import LimeTabularExplainer
 import numpy as np
 import config
 from Utils.preprocess.schema_handler import produce_schema_param
 import os
 import glob
-
+import datetime
 # TODO document module file
 
 
@@ -21,7 +21,7 @@ class explainer:
         self.model_predictor = model_predictor
         self.class_names = self.model_predictor.get_class_names()
         print("class names are: ", self.class_names)
-        self.explainer = LimeTextExplainer(class_names=self.class_names)
+        self.explainer = LimeTabularExplainer(class_names=self.class_names)
         self.MAX_LOCAL_EXPLANATIONS = 3
 
     def explain_texts(self, text: str, top_labels=None):
@@ -87,6 +87,9 @@ class explainer:
         data = data.head(self.MAX_LOCAL_EXPLANATIONS)
 
         output = {}
+        output["status"] = "success"
+        output["message"]=""
+        output["timestamp"] = datetime.datetime.utcnow()
         id_col, text_col, targ_col = get_id_text_targ_col()
         ids = data[id_col]
         texts = data[text_col]
@@ -95,13 +98,14 @@ class explainer:
             result = {}
             print(f"raw text: {txt}")
             self.explain_texts(text=txt)
-            result[id_col] = id
-            result["label"] = self.get_prediction()
-            result["probabilities"] = self.get_label_probabilities()
+            result["sampleId"] = id
+            result["predictedClass"] = self.get_prediction()
+            result["predictedProbabilities"] = self.get_label_probabilities()
             result["explanations"] = self.get_explanations()
             pred_list.append(result)
 
         output["predictions"] = pred_list
+        output["explanationMethod"]="Lime"
         return output
 
 
