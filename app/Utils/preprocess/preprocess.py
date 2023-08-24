@@ -97,7 +97,7 @@ class PreprocessData():
         self.data=self.data.drop(self.id_col, axis=1)
 
     def get_ids(self):
-        return self.data[list(self.sort_col_names)[0]]
+        return self.data[self.id_col]
 
     def sort_as_schem(self):
         '''To ensure the consistancy of inputs are the same each time'''

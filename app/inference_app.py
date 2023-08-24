@@ -71,9 +71,7 @@ def infer():
 
         predictions = predector.predict_get_results(data=data)
         # Convert from dataframe to CSV
-        out = io.StringIO()
-        predictions.to_csv(out, index=False)
-        result = out.getvalue()
+        result = json.dumps(predictions)
 
         return flask.Response(response=result, status=200, mimetype="text/csv")
 

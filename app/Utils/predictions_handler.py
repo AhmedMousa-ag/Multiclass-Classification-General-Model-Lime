@@ -6,7 +6,7 @@ from Utils.model_builder import load_model
 from Utils.preprocess.preprocess import PreprocessData, prep_NUMERIC
 import os
 from Utils.preprocess.schema_handler import produce_schema_param
-
+import datetime
 
 SAVED_TEST_PRED_PATH = config.SAVED_TEST_PRED_PATH
 seed = config.RAND_SEED
@@ -67,7 +67,6 @@ class Predictor(__predictor_base_explain):
 
         preds = self.model.predict(processed_data).to_numpy()
         pred_probab = self.model.predict_proba(processed_data).to_numpy()
-        print("prediction probability: ",pred_probab)
         num_uniq_preds = len(self.schema["target_classes"])
         uniqe_preds_names = self.preprocessor.invers_labels(preds)
         results_pd = pd.DataFrame([])
@@ -94,24 +93,31 @@ class Predictor(__predictor_base_explain):
 
 
     def predict_get_results(self, data=None):
-        print("passed data: ",data)
         if not data is None:
             self.preprocessor = PreprocessData(
                 data, train=False, shuffle_data=False)
 
         id_col_name = self.preprocessor.get_id_col_name()
-        ids = self.preprocessor.get_ids()
+        ids = self.preprocessor.get_ids().to_numpy()
         self.preprocessor.drop_ids()
-        print("after cleaning data: ",data)
         processed_data = self.preprocessor.get_data()
-        print("processed_data: ",processed_data)
-        preds = self.model.predict(processed_data)
+        preds = self.model.predict(processed_data).to_numpy()
+        preds_proba = self.model.predict_proba(processed_data).to_numpy()
         preds = self.preprocessor.invers_labels(preds)
-        results_pd = pd.DataFrame([])
-        results_pd[id_col_name] = ids
-        results_pd["prediction"] = preds
-        results_pd = results_pd.sort_values(by=[id_col_name])
-        return results_pd
+        result = {}
+        result["status"] = "success"
+        result["message"] = ""
+        result["timestamp"] =datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        result["targetClasses"] = self.get_class_names()
+        predictions = []
+        for (id,pred ,pred_probabitliy) in zip(ids,preds,preds_proba):
+            pred_res = {}
+            pred_res["sampleId"] = str(id)
+            pred_res["predictedClass"] = pred
+            pred_res["predictedProbabilities"] = [str(prob) for prob in pred_probabitliy]
+            predictions.append(pred_res)
+        result["predictions"] = predictions
+        return result
 
     def conv_labels_no_probability(self, preds):
         #preds = np.array(np.squeeze(preds))

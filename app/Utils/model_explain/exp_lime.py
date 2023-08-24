@@ -5,8 +5,6 @@ import numpy as np
 import config
 from Utils.preprocess.schema_handler import produce_schema_param
 from Utils.preprocess.preprocess import PreprocessData
-import os
-import glob
 import datetime
 import pandas as pd
 
