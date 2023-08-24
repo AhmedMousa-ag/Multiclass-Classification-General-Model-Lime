@@ -141,7 +141,7 @@ class Predictor(__predictor_base_explain):
             return prediction
 
     def save_predictions(self, save_path=SAVED_TEST_PRED_PATH):
-        path = os.path.join(save_path, "test_predictions.csv")
+        path = os.path.join(save_path, "predictions.csv")
         test_result = self.predict_test()
         test_result.to_csv(path,index=False)
         print(f"saved results to: {path}")
