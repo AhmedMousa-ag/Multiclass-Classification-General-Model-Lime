@@ -27,8 +27,8 @@ def train():
 
         PRESETS = ['good_quality', 'optimize_for_deployment']
 
-        predictor = TabularPredictor(label="driver_factor",path=config.MODEL_SAVE_PATH)
-        result = predictor.fit(train_data=train_data,
+        predictor = TabularPredictor(label="driver_factor",path=config.MODEL_SAVE_PATH,)
+        result = predictor.fit(train_data=train_data,auto_stack=True,
                     verbosity=3,presets=PRESETS)#, time_limit=TIMELIMIT,
          #hyperparameters=HYPERPARAMETERS,hyperparameter_tune_kwargs=HYPERPARAMETER_TUNE_KWARGS)
         print("hyper res: ",result)

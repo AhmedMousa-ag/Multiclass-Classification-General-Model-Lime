@@ -32,8 +32,8 @@ DATA_SCHEMA = read_json_file(DATA_SCHEMA_PATH)
 
 
 
-ERRORS_PATH =  os.path.join(OUTPUTS_PATH, "errors")
-FAILURE_PATH = os.path.join(ERRORS_PATH,"train_error.txt")
+FAILURE_PATH =  os.path.join(OUTPUTS_PATH, "errors")
+#FAILURE_PATH = os.path.join(ERRORS_PATH,"train_error.txt")
 check_dir(FAILURE_PATH)
 
 

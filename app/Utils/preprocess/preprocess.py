@@ -27,7 +27,6 @@ class PreprocessData():
         """
         if not isinstance(data, pd.DataFrame):  # This should handle if the passed data is json or something else
             self.data = pd.DataFrame(data)
-
         else:
             self.data = data
 
@@ -95,14 +94,14 @@ class PreprocessData():
             return labels
 
     def drop_ids(self):
-        self.data.drop(self.id_col, axis=1, inplace=True)
+        self.data=self.data.drop(self.id_col, axis=1)
 
     def get_ids(self):
         return self.data[list(self.sort_col_names)[0]]
 
     def sort_as_schem(self):
         '''To ensure the consistancy of inputs are the same each time'''
-        self.data = self.data[self.sort_col_names]
+        self.data = self.data[list(self.sort_col_names)]
 
     def get_id_col_name(self):
         return self.id_col

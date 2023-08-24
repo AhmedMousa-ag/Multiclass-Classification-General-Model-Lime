@@ -15,16 +15,13 @@ class __predictor_base_explain():
     """This is a base class for predictor to insure that the most important functions will be available,
     please modify next function as how it suits your algo, just be careful to the output"""
 
-    def predict_explain(self,text: str):
+    def predict_explain(self,data):
         """This function takes text as string input.
         P.S: text processing happens here
         return: np array of prediction probabilities for each label"""
-        if not isinstance(text,list):
-            text = list(text)
-        if len(text)<1:
-            text = np.expand_dims(text,axis=0)
-
-        preds = self.model.predict(text)
+        if not isinstance(data,pd.DataFrame):
+            data = pd.DataFrame(data,columns=self.get_columns_names())
+        preds = self.model.predict_proba(data).to_numpy()
         if preds.shape[1] >1:
             return preds
         else:
@@ -50,6 +47,12 @@ class Predictor(__predictor_base_explain):
                 data, train=False, shuffle_data=False)
 
         self.schema = produce_schema_param(config.DATA_SCHEMA)
+
+    def get_columns_names(self):
+        col_names = []
+        for feature in self.schema["features"]:
+            col_names.append(feature["name"])
+        return col_names
 
     def predict_test(self, data=None):  # called for test prediction
         if not data is None:
@@ -91,6 +94,7 @@ class Predictor(__predictor_base_explain):
 
 
     def predict_get_results(self, data=None):
+        print("passed data: ",data)
         if not data is None:
             self.preprocessor = PreprocessData(
                 data, train=False, shuffle_data=False)
@@ -98,8 +102,9 @@ class Predictor(__predictor_base_explain):
         id_col_name = self.preprocessor.get_id_col_name()
         ids = self.preprocessor.get_ids()
         self.preprocessor.drop_ids()
-
+        print("after cleaning data: ",data)
         processed_data = self.preprocessor.get_data()
+        print("processed_data: ",processed_data)
         preds = self.model.predict(processed_data)
         preds = self.preprocessor.invers_labels(preds)
         results_pd = pd.DataFrame([])

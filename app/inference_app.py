@@ -12,7 +12,7 @@ import warnings
 from Utils.predictions_handler import Predictor
 from Utils.model_builder import load_model
 import config
-from Utils.model_explain.exp_lime import explainer
+from Utils.model_explain.exp_lime import Explainer
 import json
 
 
@@ -22,7 +22,9 @@ failure_path = config.FAILURE_PATH
 
 model = load_model()
 
+predictor =  Predictor(model=model)
 
+explainer =  Explainer(predictor)
 # The flask app for serving predictions
 app = flask.Flask(__name__)
 
@@ -47,9 +49,16 @@ def infer():
     if flask.request.content_type == "text/csv":
         data = flask.request.data.decode("utf-8")
         s = io.StringIO(data)
-        data = pd.read_csv(s)
+        raw_data = []
+        for row in s["instances"]:
+            raw_data.append(row)
+        data = pd.DataFrame(raw_data)
     elif flask.request.content_type == 'application/json': # checks for json data
         data = flask.request.get_json()
+        raw_data = []
+        for row in data["instances"]:
+            raw_data.append(row)
+        data = pd.DataFrame(raw_data)
     else:
         return flask.Response(
             response="This predictor only supports CSV, and json data",
@@ -59,6 +68,7 @@ def infer():
     # Do the prediction
     try:
         predector = Predictor(model=model)
+
         predictions = predector.predict_get_results(data=data)
         # Convert from dataframe to CSV
         out = io.StringIO()
@@ -85,7 +95,7 @@ def infer():
 
 
 @app.route("/explain", methods=["POST"])
-def explain():
+def explain_xai():
     """Get local explanations on a few samples. In this  server, we take data as CSV, convert
     it to a pandas data frame for internal use.
     Explanations come back using the ids passed in the input data.
@@ -96,10 +106,16 @@ def explain():
     if flask.request.content_type == "text/csv":
         data = flask.request.data.decode("utf-8")
         s = io.StringIO(data)
-        data = pd.read_csv(s)
+        raw_data = []
+        for row in s["instances"]:
+            raw_data.append(row)
+        data = pd.DataFrame(raw_data)
     elif flask.request.content_type == 'application/json': # checks for json data
         data = flask.request.get_json()
-        data = pd.DataFrame(data)
+        raw_data = []
+        for row in data["instances"]:
+            raw_data.append(row)
+        data = pd.DataFrame(raw_data)
     else:
         return flask.Response(
             response="This predictor only supports CSV, and json data",
@@ -108,9 +124,8 @@ def explain():
 
     # Do the prediction
     try:
-        predictor =  Predictor(model=model)
-        explain =  explainer(predictor)
-        result =  explain.produce_explainations(data)
+
+        result =  explainer.produce_explainations(data)
         result = json.dumps(result)
         return flask.Response(response=result, status=200, mimetype='application/json')
     except Exception as err:
