@@ -52,8 +52,7 @@ class PreprocessData():
         if self.data.duplicated().sum() > 0:
             self.data.drop_duplicates(inplace=True)
 
-        self.data.dropna(inplace=True)
-
+        #self.data.dropna(inplace=True)
         self.data.reset_index(drop=True)
 
     def fit_transform(self):
@@ -72,12 +71,12 @@ class PreprocessData():
         for feature in self.schema_param["features"]:
             col_name = feature["name"]
             self.sort_col_names.add(col_name)
+            self.data[col_name] = self.populate_null_val(self.data[col_name],col_name)
             if feature["data_type"]=="NUMERIC":
                 # Will use MinMax Scaller
                 self.data[col_name] = prep_NUMERIC.Min_Max_Scale(self.data[col_name],col_name,self.artifacts_path,self.is_training)
                 continue
             elif feature["data_type"] == "CATEGORICAL":
-                self.sort_col_names.add(col_name)
                 self.data[col_name] = prep_NUMERIC.LabelEncoder( # label encoder will go throug all fields and encode it,
                                             # It's not advisable in software engineering to load all dataset in memory.
                                             # Better ways is to grap categories from the schema and labels them
@@ -185,6 +184,20 @@ class PreprocessData():
 
         encoder = prep_NUMERIC.get_Label_Encoder(labels, self.artifacts_path)
         return list(encoder.classes_)
+
+    def populate_null_val(self,data,col_name):
+        path = os.path.join(self.artifacts_path, f"mean_{col_name}.pkl")
+        if self.is_training:
+            if isinstance(self.data.dtypes,object) or isinstance(self.data.dtypes,str):
+                mean_val = data.value_counts().idxmax()
+            else:
+                mean_val =  data.mean()
+            data_mean = data.fillna(mean_val)
+            pickle.dump(mean_val, open(path, 'wb'))
+        else:
+            mean_val = pickle.load(open(path, "rb"))
+            data_mean = data.fillna(mean_val)
+        return data_mean
 # ----------------------------------------------------------
 
 # Prep Category
