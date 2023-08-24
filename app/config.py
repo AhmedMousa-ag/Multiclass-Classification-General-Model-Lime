@@ -77,7 +77,7 @@ check_dir(HYPER_PARAM_PATH)
 
 #Autogluon Time Limit
 TIMELIMIT= 30 #mins
-
+PRESETS = ['good_quality', 'optimize_for_deployment']
 #Hyperparameter Configurations
 NUM_EPOCHS_LOWER = os.getenv("NUM_EPOCHS_LOWER")
 NUM_EPOCHS_UPPER = os.getenv("NUM_EPOCHS_UPPER")
