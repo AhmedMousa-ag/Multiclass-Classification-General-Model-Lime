@@ -29,7 +29,7 @@ def train():
 
         predictor = TabularPredictor(label="driver_factor",path=config.MODEL_SAVE_PATH,)
         result = predictor.fit(train_data=train_data,auto_stack=True,
-                    verbosity=3,presets=PRESETS)#, time_limit=TIMELIMIT,
+                    verbosity=3,presets=PRESETS, time_limit=config.TIMELIMIT)
          #hyperparameters=HYPERPARAMETERS,hyperparameter_tune_kwargs=HYPERPARAMETER_TUNE_KWARGS)
         print("hyper res: ",result)
         print(".................finished training...............")

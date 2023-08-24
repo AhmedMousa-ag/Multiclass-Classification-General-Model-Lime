@@ -75,6 +75,8 @@ check_dir(SAVED_TEST_PRED_PATH)
 HYPER_PARAM_PATH = os.path.join(OUTPUTS_PATH, "hpt_outputs")
 check_dir(HYPER_PARAM_PATH)
 
+#Autogluon Time Limit
+TIMELIMIT= 30 #mins
 
 #Hyperparameter Configurations
 NUM_EPOCHS_LOWER = os.getenv("NUM_EPOCHS_LOWER")
